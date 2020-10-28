@@ -5,11 +5,14 @@
  */
 package com.pccw.ui;
 
+
 import com.pccw.modal.CsvHeader;
 import com.pccw.modal.FileRevisionInfo;
 import com.pccw.service.FileExtractorService;
 import com.pccw.util.CommonUtil;
 import com.pccw.util.LayoutIndex;
+
+
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -20,8 +23,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
@@ -29,6 +31,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -41,8 +45,12 @@ public class SvnDiffMgr extends javax.swing.JFrame {
      */
     DefaultListModel<CsvHeader> lm = null;
     List<FileRevisionInfo> fileRevisionList=null;
+    
+     Logger logger = LoggerFactory.getLogger(SvnDiffMgr.class);
+     
 
     public SvnDiffMgr() {
+        logger.info("Initializing the SVNDiffMgr");
         initComponents();
         jButton5.setText(String.valueOf("\u02C4"));
         jButton6.setText(String.valueOf("\u02C5"));
@@ -52,7 +60,8 @@ public class SvnDiffMgr extends javax.swing.JFrame {
         try {
             image = ImageIO.read(ClassLoader.getSystemResource("Document-Copy-icon.png"));
         } catch (IOException ex) {
-            Logger.getLogger(SvnDiffMgr.class.getName()).log(Level.SEVERE, null, ex);
+            
+            logger.error(CommonUtil.getExceptionString(ex));
         }
         this.setIconImage(image);
 
@@ -356,7 +365,7 @@ public class SvnDiffMgr extends javax.swing.JFrame {
         FileExtractorService fileExtractorService=new FileExtractorService(jTextField4.getText());
         fileExtractorService.setUrl(jTextField1.getText());
         fileExtractorService.setUserName(jTextField2.getText());
-        fileExtractorService.setPassword(jTextField3.getText());
+        fileExtractorService.setPassword(new String(jPasswordField1.getPassword()));
         fileExtractorService.extractFileFromSvn(fileRevisionList);
         LayoutIndex.createLayout2(jTextField4.getText());
         }
@@ -385,8 +394,7 @@ public class SvnDiffMgr extends javax.swing.JFrame {
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         // TODO add your handling code here:
-        int selctedIndex = jList2.getSelectedIndex();
-        System.out.println(selctedIndex);
+        int selctedIndex = jList2.getSelectedIndex();        
         if (selctedIndex > 0) {
             CsvHeader s = lm.getElementAt(selctedIndex);
 
@@ -488,12 +496,12 @@ public class SvnDiffMgr extends javax.swing.JFrame {
         try {
             in = new FileReader(selectedFile);
             List<String> csvHeaders = CSVFormat.EXCEL.withFirstRecordAsHeader().parse(in).getHeaderNames();
-            System.out.println(csvHeaders.size());
+            logger.debug(csvHeaders.size()+"");
 
             lm = new DefaultListModel<>();
             int indexNo = 0;
             for (String s : csvHeaders) {
-                System.out.println(s);
+                logger.debug(s);
                 CsvHeader csvHeader = new CsvHeader(s, indexNo);
                 indexNo++;
                 lm.addElement(csvHeader);
@@ -502,7 +510,7 @@ public class SvnDiffMgr extends javax.swing.JFrame {
             jList2.setModel(lm);
 
         } catch (Exception ex) {
-            Logger.getLogger(SvnDiffMgr.class.getName()).log(Level.SEVERE, null, ex);
+           logger.error(CommonUtil.getExceptionString(ex));
         }
 
     }
@@ -516,11 +524,12 @@ public class SvnDiffMgr extends javax.swing.JFrame {
                 fri.setRevisionNo1(Long.parseLong(record.get(lm.get(0).getColumnIndexNo())));
                 fri.setRevisionNo2(Long.parseLong(record.get(lm.get(1).getColumnIndexNo())));
                 fri.setFilePath(record.get(lm.get(2).getColumnIndexNo()));
+                fri.setBranch(record.get(lm.get(3).getColumnIndexNo()));
                 fileRevisonInfoList.add(fri);
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+          logger.error(CommonUtil.getExceptionString(e));
         }
         return fileRevisonInfoList;
     }

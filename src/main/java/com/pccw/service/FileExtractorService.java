@@ -15,6 +15,8 @@ import java.io.FileWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,6 +75,11 @@ public class FileExtractorService {
          List<FileRevisionInfo> fileRevisionInfoList = fileRevisonList;
         svnRc = new SvnRepositoryConnector();
         this.repository = svnRc.connectToRepo(url, userName, password);
+        try {
+            System.out.println("latest Revision No"+this.repository.getLatestRevision());
+        } catch (SVNException ex) {
+            Logger.getLogger(FileExtractorService.class.getName()).log(Level.SEVERE, null, ex);
+        }
         TemplateExtractor.extractFromResourceDIR(fileStoragePath);
         createFolderLayoutFromPathRevison(fileRevisionInfoList);
         buildIndexHtml(indexTreeGenerator());
@@ -90,6 +97,7 @@ public class FileExtractorService {
                 long revisionNo2 = fri.getRevisionNo2();
                 resetConnection();
                 fri.setFile1Content(pullFile(path, revisionNo1, svnProperties, fri.getBranch()));
+                System.out.println("File 1 Content== "+fri.getFile1Content());
                 resetConnection();
                 fri.setFile2Content(pullFile(path, revisionNo2, svnProperties, fri.getBranch()));
                 createHtmlFileSubFile(fri);
@@ -138,6 +146,7 @@ public class FileExtractorService {
         if(fileRevisionInfo.getFilePath()!=null){
          //   System.out.println("HtmlSubFile: "+fileRevisionInfo.getFilePath());
             String fileUrl=fileRevisionInfo.getFilePath();
+            System.out.println(fileUrl);
             String[] spliterFileUrl = fileUrl.split("\\\\");
             String lastFilename = spliterFileUrl[spliterFileUrl.length - 1];
             String firstFilename = spliterFileUrl[1];
